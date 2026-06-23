@@ -1,0 +1,16 @@
+{
+  "name": "簿記3級 本試験シミュレーター",
+  "short_name": "簿記3級模試",
+  "description": "日商簿記3級の本試験を60分・100点満点でそっくり再現するCBT練習アプリ",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f2942",
+  "theme_color": "#0f2942",
+  "icons": [
+    { "src": "icon_96.png",  "sizes": "96x96",   "type": "image/png" },
+    { "src": "icon_192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon_512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

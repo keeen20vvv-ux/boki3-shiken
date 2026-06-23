@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#0f2942">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="簿記3級模試">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon_192.png">
+<title>簿記3級 本試験シミュレーター</title>
+<style>
+:root{
+  --navy:#0f2942; --navy2:#1a3a5c; --blue:#2980b9; --accent:#3498db;
+  --green:#27ae60; --green2:#1e8449; --red:#e74c3c; --orange:#e67e22;
+  --gold:#f1c40f; --bg:#eef2f6; --card:#ffffff; --line:#dde4ec;
+  --txt:#1f2d3d; --txt2:#6b7a8d; --radius:16px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{background:#cdd7e0}
+body{
+  font-family:-apple-system,'Hiragino Sans','Hiragino Kaku Gothic ProN',sans-serif;
+  background:var(--bg); color:var(--txt); font-size:15px; line-height:1.6;
+  max-width:600px; margin:0 auto; min-height:100vh;
+  box-shadow:0 0 40px rgba(0,0,0,.15);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.screen{display:none; min-height:100vh; flex-direction:column}
+.screen.active{display:flex}
+
+/* ===== HOME ===== */
+.hero{
+  background:linear-gradient(150deg,#0f2942 0%,#1a3a5c 55%,#2980b9 130%);
+  color:#fff; padding:30px 22px 26px; padding-top:calc(env(safe-area-inset-top) + 24px);
+  border-radius:0 0 26px 26px; position:relative; overflow:hidden;
+}
+.hero::after{content:"";position:absolute;right:-40px;top:-40px;width:170px;height:170px;
+  background:radial-gradient(circle,rgba(255,255,255,.10),transparent 70%);border-radius:50%}
+.hero-badge{display:inline-block;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);
+  font-size:11px;font-weight:700;padding:4px 11px;border-radius:20px;margin-bottom:12px;letter-spacing:.5px}
+.hero h1{font-size:25px;font-weight:900;letter-spacing:-.5px;line-height:1.25}
+.hero p{font-size:13px;opacity:.88;margin-top:7px}
+.hero-stats{display:flex;gap:10px;margin-top:18px}
+.hero-stat{flex:1;background:rgba(255,255,255,.13);border-radius:14px;padding:11px 8px;text-align:center}
+.hero-stat .n{font-size:21px;font-weight:900;line-height:1}
+.hero-stat .l{font-size:10.5px;opacity:.82;margin-top:4px}
+
+.wrap{padding:18px 16px 40px}
+.sec-label{font-size:12px;font-weight:800;color:var(--txt2);letter-spacing:.8px;
+  margin:22px 4px 11px;text-transform:uppercase;display:flex;align-items:center;gap:7px}
+.sec-label:first-child{margin-top:6px}
+
+.exam-card{
+  background:var(--card);border-radius:var(--radius);padding:16px 16px 15px;margin-bottom:13px;
+  box-shadow:0 3px 14px rgba(20,40,70,.07);border:1px solid var(--line);cursor:pointer;
+  transition:transform .12s; width:100%; text-align:left; display:block; position:relative; overflow:hidden;
+}
+.exam-card:active{transform:scale(.985)}
+.exam-card .ribbon{position:absolute;top:0;left:0;width:5px;height:100%;background:var(--blue)}
+.exam-card.gold .ribbon{background:var(--gold)}
+.exam-card.green .ribbon{background:var(--green)}
+.exam-top{display:flex;align-items:center;gap:11px;margin-bottom:9px;padding-left:6px}
+.exam-ico{width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,#1a3a5c,#2980b9);
+  display:flex;align-items:center;justify-content:center;font-size:23px;flex-shrink:0}
+.exam-card.gold .exam-ico{background:linear-gradient(135deg,#b9870b,#f1c40f)}
+.exam-card.green .exam-ico{background:linear-gradient(135deg,#1e8449,#2ecc71)}
+.exam-name{font-size:16px;font-weight:800;line-height:1.3}
+.exam-sub{font-size:11.5px;color:var(--txt2);margin-top:2px}
+.exam-meta{display:flex;gap:8px;align-items:center;padding-left:6px;flex-wrap:wrap}
+.exam-pill{font-size:11px;font-weight:700;padding:3px 9px;border-radius:11px;background:#eef3f8;color:var(--navy2)}
+.exam-pill.best{background:#eafaf1;color:var(--green2)}
+.exam-pill.pass{background:var(--green);color:#fff}
+.exam-pill.fail{background:#fdecea;color:var(--red)}
+.exam-arrow{margin-left:auto;color:var(--txt2);font-size:18px}
+
+.mode-card{background:var(--card);border-radius:var(--radius);padding:15px 16px;margin-bottom:11px;
+  display:flex;align-items:center;gap:13px;cursor:pointer;border:1px solid var(--line);
+  box-shadow:0 3px 14px rgba(20,40,70,.06);width:100%;text-align:left;transition:transform .12s}
+.mode-card:active{transform:scale(.985)}
+.mode-ico{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  font-size:21px;flex-shrink:0;color:#fff}
+.mode-ico.t{background:linear-gradient(135deg,#8e44ad,#9b59b6)}
+.mode-ico.r{background:linear-gradient(135deg,#c0392b,#e74c3c)}
+.mode-name{font-size:15px;font-weight:800}
+.mode-sub{font-size:11.5px;color:var(--txt2);margin-top:2px}
+.mode-arrow{margin-left:auto;color:var(--txt2);font-size:17px}
+
+.guide{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin-top:8px;
+  font-size:12.5px;color:var(--txt2);line-height:1.85}
+.guide b{color:var(--navy2)}
+
+/* ===== EXAM HEADER ===== */
+.ex-head{background:var(--navy);color:#fff;padding:9px 14px;position:sticky;top:0;z-index:50;
+  padding-top:calc(env(safe-area-inset-top) + 8px);box-shadow:0 2px 12px rgba(0,0,0,.3)}
+.ex-head-row{display:flex;align-items:center;gap:10px}
+.ex-quit{background:rgba(255,255,255,.15);border:none;color:#fff;font-size:12px;font-weight:700;
+  padding:7px 12px;border-radius:9px;cursor:pointer}
+.ex-title{font-size:13px;font-weight:700;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.timer{font-size:19px;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:.5px;
+  background:rgba(255,255,255,.13);padding:5px 12px;border-radius:10px}
+.timer.warn{background:var(--red);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.6}}
+.daimon-tabs{display:flex;gap:6px;margin-top:9px}
+.dtab{flex:1;background:rgba(255,255,255,.10);border:none;color:rgba(255,255,255,.7);
+  font-size:12px;font-weight:700;padding:8px 4px;border-radius:9px;cursor:pointer;position:relative}
+.dtab.active{background:#fff;color:var(--navy)}
+.dtab .dt-done{position:absolute;top:3px;right:6px;font-size:9px;color:var(--green)}
+.dtab.active .dt-done{color:var(--green2)}
+
+.ex-body{flex:1;padding:16px 14px 120px;overflow-y:auto}
+
+/* 第1問 仕訳 */
+.q1nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.q1nav .qno{font-size:15px;font-weight:900;color:var(--navy)}
+.q1nav .qnav-btns{display:flex;gap:7px}
+.qnav-btn{background:#fff;border:1.5px solid var(--line);border-radius:9px;width:38px;height:34px;
+  font-size:16px;font-weight:800;color:var(--navy2);cursor:pointer}
+.qnav-btn:disabled{opacity:.35}
+.qdots{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:14px}
+.qdot{width:26px;height:26px;border-radius:8px;border:1.5px solid var(--line);background:#fff;
+  font-size:11px;font-weight:800;color:var(--txt2);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.qdot.answered{background:var(--navy2);color:#fff;border-color:var(--navy2)}
+.qdot.current{outline:3px solid var(--accent);outline-offset:1px}
+.qcard{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px;margin-bottom:13px}
+.qtext{font-size:14.5px;line-height:1.85}
+.choices-note{font-size:11px;color:var(--txt2);margin-top:11px;padding-top:10px;border-top:1px dashed var(--line)}
+.choices-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}
+.choice-chip{font-size:11.5px;background:#eef3f8;border-radius:8px;padding:4px 9px;font-weight:600}
+
+.je-head{display:flex;font-size:11px;font-weight:800;color:var(--txt2);margin-bottom:5px}
+.je-head .h{flex:1;text-align:center}
+.je-row{display:flex;gap:7px;margin-bottom:7px;align-items:flex-start}
+.je-side{flex:1;display:flex;flex-direction:column;gap:5px}
+.je-sel,.je-amt{width:100%;border:1.5px solid var(--line);border-radius:9px;padding:9px 8px;font-size:13.5px;
+  font-family:inherit;background:#fff;color:var(--txt)}
+.je-amt{text-align:right;font-variant-numeric:tabular-nums}
+.je-sel:focus,.je-amt:focus{border-color:var(--accent);outline:none}
+.je-rm{background:none;border:none;color:var(--red);font-size:16px;cursor:pointer;padding:6px 2px;align-self:center}
+.je-add{width:100%;background:#f0f6fc;border:1.5px dashed var(--blue);color:var(--blue);
+  border-radius:9px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;margin-top:2px}
+
+/* 第2/3問 穴埋め */
+.fill-ctx{background:#f7fafd;border:1px solid var(--line);border-radius:12px;padding:13px;margin-bottom:14px;
+  font-size:12px;line-height:1.8;color:var(--txt2)}
+.fill-ctx h4{font-size:12.5px;color:var(--navy);margin-bottom:6px;font-weight:800}
+.fill-ctx .tb{font-variant-numeric:tabular-nums}
+.fill-group{margin-bottom:18px}
+.fill-group-title{font-size:13px;font-weight:800;color:var(--navy);margin-bottom:9px;
+  padding-left:9px;border-left:4px solid var(--blue)}
+.fill-row{display:flex;align-items:center;gap:9px;background:#fff;border:1px solid var(--line);
+  border-radius:11px;padding:9px 11px;margin-bottom:8px}
+.fill-label{flex:1;font-size:13px;font-weight:600;min-width:0}
+.fill-yen{font-size:12px;color:var(--txt2)}
+.fill-input{width:128px;border:1.5px solid var(--line);border-radius:9px;padding:9px 9px;
+  font-size:14px;text-align:right;font-variant-numeric:tabular-nums;font-family:inherit;background:#fff}
+.fill-input:focus{border-color:var(--accent);outline:none}
+.fill-sel{width:148px;border:1.5px solid var(--line);border-radius:9px;padding:9px 7px;font-size:13px;font-family:inherit;background:#fff}
+
+/* submit bar */
+.ex-foot{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:600px;
+  background:rgba(255,255,255,.96);backdrop-filter:blur(8px);border-top:1px solid var(--line);
+  padding:11px 14px;padding-bottom:calc(env(safe-area-inset-bottom) + 11px);z-index:40;display:flex;gap:10px}
+.foot-info{flex:1;font-size:11.5px;color:var(--txt2);align-self:center;line-height:1.4}
+.foot-info b{color:var(--navy);font-size:13px}
+.btn-grade{background:linear-gradient(135deg,#1e8449,#27ae60);color:#fff;border:none;border-radius:12px;
+  padding:13px 24px;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(39,174,96,.35)}
+.btn-grade:active{transform:scale(.97)}
+
+/* ===== CALCULATOR ===== */
+.calc-fab{position:fixed;bottom:78px;right:14px;width:54px;height:54px;border-radius:50%;
+  background:var(--navy);color:#fff;border:none;font-size:24px;box-shadow:0 5px 18px rgba(15,41,66,.45);
+  cursor:pointer;z-index:60;display:flex;align-items:center;justify-content:center}
+.calc-pop{position:fixed;bottom:140px;right:14px;width:226px;background:#1c1c1e;border-radius:18px;
+  padding:12px;box-shadow:0 12px 40px rgba(0,0,0,.5);z-index:61;display:none}
+.calc-pop.show{display:block}
+.calc-disp{background:#000;color:#fff;border-radius:10px;padding:11px 13px;text-align:right;
+  font-size:24px;font-weight:600;font-variant-numeric:tabular-nums;margin-bottom:9px;overflow:hidden;min-height:46px;
+  word-break:break-all}
+.calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.calc-k{border:none;border-radius:11px;padding:13px 0;font-size:17px;font-weight:600;cursor:pointer;
+  background:#333;color:#fff}
+.calc-k.op{background:#ff9f0a}
+.calc-k.fn{background:#a5a5a5;color:#000}
+.calc-k.eq{background:#ff9f0a}
+.calc-k:active{opacity:.7}
+
+/* ===== RESULT ===== */
+.res-hero{padding:34px 22px 28px;padding-top:calc(env(safe-area-inset-top) + 30px);color:#fff;text-align:center;
+  border-radius:0 0 26px 26px;position:relative;overflow:hidden}
+.res-hero.pass{background:linear-gradient(150deg,#1e8449,#27ae60 70%,#2ecc71)}
+.res-hero.fail{background:linear-gradient(150deg,#5d6d7e,#85929e)}
+.res-verdict{font-size:14px;font-weight:700;opacity:.92;letter-spacing:2px}
+.res-score{font-size:62px;font-weight:900;line-height:1;margin:6px 0 2px;letter-spacing:-2px}
+.res-score small{font-size:22px;font-weight:700;opacity:.8}
+.res-passmark{font-size:12px;opacity:.85}
+.res-time{display:inline-block;margin-top:13px;background:rgba(255,255,255,.18);border-radius:20px;
+  padding:5px 15px;font-size:12.5px;font-weight:600}
+.res-break{padding:18px 16px 8px}
+.break-row{background:#fff;border:1px solid var(--line);border-radius:13px;padding:13px 15px;margin-bottom:10px;
+  display:flex;align-items:center;gap:13px}
+.break-dai{font-size:13px;font-weight:800;color:var(--navy);width:54px;flex-shrink:0}
+.break-bar-wrap{flex:1}
+.break-bar-top{display:flex;justify-content:space-between;font-size:11.5px;color:var(--txt2);margin-bottom:5px}
+.break-bar{height:9px;background:#eef2f6;border-radius:5px;overflow:hidden}
+.break-fill{height:100%;border-radius:5px;transition:width .6s}
+.res-actions{padding:6px 16px 36px;display:flex;flex-direction:column;gap:10px}
+.btn-primary{background:linear-gradient(135deg,#1a3a5c,#2980b9);color:#fff;border:none;border-radius:13px;
+  padding:15px;font-size:15px;font-weight:800;cursor:pointer;width:100%}
+.btn-outline{background:#fff;color:var(--navy2);border:2px solid var(--line);border-radius:13px;
+  padding:14px;font-size:15px;font-weight:800;cursor:pointer;width:100%}
+.btn-primary:active,.btn-outline:active{transform:scale(.98)}
+
+/* ===== REVIEW ===== */
+.rv-head{background:var(--navy);color:#fff;padding:13px 14px;position:sticky;top:0;z-index:50;
+  padding-top:calc(env(safe-area-inset-top) + 12px);display:flex;align-items:center;gap:11px}
+.rv-back{background:rgba(255,255,255,.15);border:none;color:#fff;font-size:13px;font-weight:700;
+  padding:8px 13px;border-radius:9px;cursor:pointer}
+.rv-body{padding:14px 14px 50px}
+.rv-q{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:13px}
+.rv-q.correct{border-left:5px solid var(--green)}
+.rv-q.wrong{border-left:5px solid var(--red)}
+.rv-q.partial{border-left:5px solid var(--orange)}
+.rv-q-top{display:flex;align-items:center;gap:8px;margin-bottom:9px}
+.rv-mark{font-size:18px}
+.rv-qno{font-size:12px;font-weight:800;color:var(--navy2)}
+.rv-pts{margin-left:auto;font-size:12px;font-weight:800}
+.rv-pts.ok{color:var(--green2)} .rv-pts.ng{color:var(--red)} .rv-pts.pt{color:var(--orange)}
+.rv-qtext{font-size:13px;line-height:1.8;margin-bottom:11px}
+.rv-tbl{width:100%;border-collapse:collapse;margin-bottom:9px;font-size:12px}
+.rv-tbl th{background:#f1f5f9;font-size:10.5px;color:var(--txt2);padding:5px;font-weight:700;border:1px solid var(--line)}
+.rv-tbl td{padding:6px 7px;border:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+.rv-tbl td.acc{text-align:left;font-weight:600}
+.rv-tbl .your{background:#fdf3f2}
+.rv-tbl .corr{background:#eefaf1}
+.rv-expl{background:#fffdf3;border:1px solid #f3e3a8;border-radius:10px;padding:10px 12px;font-size:12px;
+  line-height:1.8;color:#5d4e10}
+.rv-expl b{color:#7a5c00}
+.rv-sec-label{font-size:12px;font-weight:800;color:var(--txt2);margin:18px 4px 10px;letter-spacing:.5px}
+
+.empty{text-align:center;color:var(--txt2);padding:50px 20px;font-size:13px}
+
+/* toast */
+.toast{position:fixed;bottom:150px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;
+  padding:11px 20px;border-radius:24px;font-size:13px;font-weight:600;z-index:90;opacity:0;transition:opacity .3s;
+  pointer-events:none;max-width:90%;text-align:center}
+.toast.show{opacity:.96}
+
+/* modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:80;display:none;align-items:center;justify-content:center;padding:24px}
+.modal-bg.show{display:flex}
+.modal{background:#fff;border-radius:18px;padding:22px;max-width:340px;width:100%;text-align:center}
+.modal h3{font-size:17px;font-weight:800;margin-bottom:8px}
+.modal p{font-size:13px;color:var(--txt2);line-height:1.7;margin-bottom:18px}
+.modal-btns{display:flex;gap:10px}
+.modal-btns button{flex:1;border-radius:11px;padding:12px;font-size:14px;font-weight:800;cursor:pointer;border:none}
+.m-cancel{background:#edf1f5;color:var(--txt)}
+.m-ok{background:var(--red);color:#fff}
+.m-ok.go{background:var(--green)}
+</style>
+</head>
+<body>
+
+<!-- ===================== HOME ===================== -->
+<div id="screen-home" class="screen active">
+  <div class="hero">
+    <span class="hero-badge">日商簿記3級 CBT対応</span>
+    <h1>本試験シミュレーター</h1>
+    <p>本番そっくり・60分・100点満点。第1問〜第3問を通しで解いて合格力を測ろう。</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="n" id="hs-attempts">0</div><div class="l">受験回数</div></div>
+      <div class="hero-stat"><div class="n" id="hs-best">―</div><div class="l">最高得点</div></div>
+      <div class="hero-stat"><div class="n" id="hs-pass">0</div><div class="l">合格回数</div></div>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="sec-label">📝 模擬試験（本番形式・60分）</div>
+    <div id="exam-list"></div>
+
+    <div class="sec-label">⚡ 特訓モード</div>
+    <button class="mode-card" onclick="startRenshu()">
+      <div class="mode-ico t">⚡</div>
+      <div>
+        <div class="mode-name">仕訳特訓（1問ずつ即採点）</div>
+        <div class="mode-sub">全模試の第1問をシャッフル・解説をすぐ確認</div>
+      </div>
+      <div class="mode-arrow">▶</div>
+    </button>
+    <button class="mode-card" onclick="startReviewWrong()">
+      <div class="mode-ico r">🔁</div>
+      <div>
+        <div class="mode-name">間違えた仕訳だけ復習</div>
+        <div class="mode-sub" id="wrong-count-sub">特訓で間違えた問題がここに集まる</div>
+      </div>
+      <div class="mode-arrow">▶</div>
+    </button>
+
+    <div class="sec-label">📖 合格のしくみ</div>
+    <div class="guide">
+      合格ラインは <b>100点満点中70点</b>。配点は <b>第1問45点（仕訳15問×3点）</b>・
+      <b>第2問20点</b>・<b>第3問35点</b>です。<br>
+      時間配分の目安は <b>第1問20分 → 第3問25分 → 第2問15分</b>。
+      第1問と第3問で確実に点を取るのが合格の王道です。
+    </div>
+  </div>
+</div>
+
+<!-- ===================== EXAM ===================== -->
+<div id="screen-exam" class="screen">
+  <div class="ex-head">
+    <div class="ex-head-row">
+      <button class="ex-quit" onclick="confirmQuit()">中断</button>
+      <div class="ex-title" id="ex-title"></div>
+      <div class="timer" id="timer">60:00</div>
+    </div>
+    <div class="daimon-tabs" id="daimon-tabs"></div>
+  </div>
+  <div class="ex-body" id="ex-body"></div>
+  <div class="ex-foot">
+    <div class="foot-info" id="foot-info"></div>
+    <button class="btn-grade" onclick="confirmSubmit()">採点する</button>
+  </div>
+  <button class="calc-fab" onclick="toggleCalc()">🧮</button>
+</div>
+
+<!-- ===================== RESULT ===================== -->
+<div id="screen-result" class="screen">
+  <div class="res-hero" id="res-hero">
+    <div class="res-verdict" id="res-verdict"></div>
+    <div class="res-score" id="res-score"></div>
+    <div class="res-passmark">合格ライン 70点</div>
+    <div class="res-time" id="res-time"></div>
+  </div>
+  <div class="res-break" id="res-break"></div>
+  <div class="res-actions">
+    <button class="btn-primary" onclick="showReview()">📖 解答・解説を見る</button>
+    <button class="btn-outline" onclick="goHome()">🏠 ホームに戻る</button>
+  </div>
+</div>
+
+<!-- ===================== REVIEW ===================== -->
+<div id="screen-review" class="screen">
+  <div class="rv-head">
+    <button class="rv-back" onclick="backToResult()">← 結果へ</button>
+    <div style="font-size:14px;font-weight:800" id="rv-title">解答・解説</div>
+  </div>
+  <div class="rv-body" id="rv-body"></div>
+</div>
+
+<!-- ===================== RENSHU (practice) ===================== -->
+<div id="screen-renshu" class="screen">
+  <div class="rv-head">
+    <button class="rv-back" onclick="goHome()">← ホーム</button>
+    <div style="font-size:14px;font-weight:800" id="renshu-title">仕訳特訓</div>
+    <div style="margin-left:auto;font-size:13px;font-weight:700" id="renshu-prog"></div>
+  </div>
+  <div class="ex-body" id="renshu-body" style="padding-bottom:120px"></div>
+  <div class="ex-foot">
+    <div class="foot-info" id="renshu-foot-info"></div>
+    <button class="btn-grade" id="renshu-action" onclick="renshuAction()">答え合わせ</button>
+  </div>
+  <button class="calc-fab" onclick="toggleCalc()">🧮</button>
+</div>
+
+<!-- 共通電卓ポップアップ -->
+<div class="calc-pop" id="calc-pop">
+  <div class="calc-disp" id="calc-disp">0</div>
+  <div class="calc-grid" id="calc-grid"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <h3 id="modal-title"></h3>
+    <p id="modal-msg"></p>
+    <div class="modal-btns">
+      <button class="m-cancel" id="modal-cancel"></button>
+      <button class="m-ok" id="modal-ok"></button>
+    </div>
+  </div>
+</div>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+}
+</script>
+</body>
+</html>
