@@ -225,11 +225,33 @@ function renderQ1Rows(){
   });
   $('je-rows').querySelectorAll('.je-amt').forEach(inp=>{
     const ri=+inp.dataset.r, f=inp.dataset.f;
-    inp.oninput = ()=>{ inp.value = inp.value.replace(/[^0-9]/g,''); rows[ri][f]=inp.value; };
-    inp.onblur = ()=>{ rows[ri][f]=inp.value.replace(/[^0-9]/g,''); inp.value=fmtAmt(rows[ri][f]); renderQ1Dots(); renderFootInfo(); renderDaimonTabs(); };
+    bindAmount(inp, (digits)=>{ rows[ri][f]=digits; }, ()=>{ renderQ1Dots(); renderFootInfo(); renderDaimonTabs(); });
   });
 }
 function fmtAmt(v){ if(v==null||v==='') return ''; const n=String(v).replace(/[^0-9]/g,''); return n===''?'':Number(n).toLocaleString('ja-JP'); }
+
+/* 金額入力欄をPCでも快適に。
+   入力中：数字以外を除去しつつカーソル位置を保持（値の保存のみ・他UIは触らない）。
+   blur時：カンマ整形＋UI更新（commit）。 */
+function bindAmount(inp, store, commit){
+  inp.addEventListener('input', ()=>{
+    const before = inp.value;
+    const pos = inp.selectionStart ?? before.length;
+    const digitsBeforeCaret = before.slice(0,pos).replace(/[^0-9]/g,'').length;
+    const digits = before.replace(/[^0-9]/g,'');
+    if(before !== digits){
+      inp.value = digits;
+      try{ inp.setSelectionRange(digitsBeforeCaret, digitsBeforeCaret); }catch(e){}
+    }
+    store(digits);          // 保存のみ（再描画しない＝カーソル安全）
+  });
+  inp.addEventListener('blur', ()=>{
+    const digits = inp.value.replace(/[^0-9]/g,'');
+    inp.value = digits ? Number(digits).toLocaleString('ja-JP') : '';
+    store(digits);
+    if(commit) commit(digits);   // ここでUI更新
+  });
+}
 function q1Move(d){ saveCurrentInputs(); const n=state.q1Idx+d; if(n>=0&&n<15){ state.q1Idx=n; renderQ1(); } }
 function q1Goto(i){ saveCurrentInputs(); state.q1Idx=i; renderQ1(); }
 function q1AddRow(){ saveCurrentInputs(); state.q1Answers[state.q1Idx].push(blankRow()); renderQ1Rows(); }
@@ -264,8 +286,7 @@ function renderFill(d){
     sel.onchange = ()=>{ state.fill[sel.dataset.key]=sel.value; renderFootInfo(); renderDaimonTabs(); };
   });
   body.querySelectorAll('.fill-input').forEach(inp=>{
-    inp.oninput = ()=>{ inp.value=inp.value.replace(/[^0-9]/g,''); state.fill[inp.dataset.key]=inp.value; };
-    inp.onblur = ()=>{ const v=inp.value.replace(/[^0-9]/g,''); state.fill[inp.dataset.key]=v; inp.value=fmtAmt(v); renderFootInfo(); renderDaimonTabs(); };
+    bindAmount(inp, (digits)=>{ state.fill[inp.dataset.key]=digits; }, ()=>{ renderFootInfo(); renderDaimonTabs(); });
   });
 }
 function saveCurrentInputs(){
@@ -549,8 +570,7 @@ function renderRenshuRows(opts){
   });
   $('r-je-rows').querySelectorAll('.je-amt').forEach(inp=>{
     const ri=+inp.dataset.r,f=inp.dataset.f;
-    inp.oninput=()=>{ inp.value=inp.value.replace(/[^0-9]/g,''); rows[ri][f]=inp.value; };
-    inp.onblur=()=>{ rows[ri][f]=inp.value.replace(/[^0-9]/g,''); inp.value=fmtAmt(rows[ri][f]); };
+    bindAmount(inp, (digits)=>{ rows[ri][f]=digits; }, null);
   });
 }
 function renshuAddRow(){ saveRenshuInputs(); renshu.rows.push(blankRow()); const it=renshu.list[renshu.idx]; const opts=['<option value="">― 科目 ―</option>'].concat(it.q.accounts.map(a=>`<option value="${a}">${a}</option>`)).join(''); renderRenshuRows(opts); }
