@@ -1,5 +1,5 @@
 /* 簿記3級 本試験シミュレーター — Service Worker (オフライン対応) */
-const CACHE = 'boki3-sim-v1';
+const CACHE = 'boki3-sim-v2';
 const ASSETS = [
   './', './index.html', './app.js', './data.js', './manifest.json',
   './icon_96.png', './icon_192.png', './icon_512.png'

@@ -60,11 +60,13 @@ body{
 .exam-card .ribbon{position:absolute;top:0;left:0;width:5px;height:100%;background:var(--blue)}
 .exam-card.gold .ribbon{background:var(--gold)}
 .exam-card.green .ribbon{background:var(--green)}
+.exam-card.brown .ribbon{background:#b45309}
 .exam-top{display:flex;align-items:center;gap:11px;margin-bottom:9px;padding-left:6px}
 .exam-ico{width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,#1a3a5c,#2980b9);
   display:flex;align-items:center;justify-content:center;font-size:23px;flex-shrink:0}
 .exam-card.gold .exam-ico{background:linear-gradient(135deg,#b9870b,#f1c40f)}
 .exam-card.green .exam-ico{background:linear-gradient(135deg,#1e8449,#2ecc71)}
+.exam-card.brown .exam-ico{background:linear-gradient(135deg,#78350f,#b45309)}
 .exam-name{font-size:16px;font-weight:800;line-height:1.3}
 .exam-sub{font-size:11.5px;color:var(--txt2);margin-top:2px}
 .exam-meta{display:flex;gap:8px;align-items:center;padding-left:6px;flex-wrap:wrap}
@@ -328,7 +330,7 @@ body{
   <div class="res-hero" id="res-hero">
     <div class="res-verdict" id="res-verdict"></div>
     <div class="res-score" id="res-score"></div>
-    <div class="res-passmark">合格ライン 70点</div>
+    <div class="res-passmark" id="res-passmark">合格ライン 70点</div>
     <div class="res-time" id="res-time"></div>
   </div>
   <div class="res-break" id="res-break"></div>

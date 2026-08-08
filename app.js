@@ -51,7 +51,8 @@ function renderHome(){
   list.innerHTML = '';
   EXAMS.forEach(ex=>{
     const b = best[ex.id];
-    const passed = b !== undefined && b >= 70;
+    const examMax = ex.q1.points + ex.q2.points + ex.q3.points;
+    const passed = b !== undefined && b >= Math.round(examMax*0.7);
     const card = document.createElement('button');
     card.className = 'exam-card ' + (ex.theme||'');
     card.onclick = ()=>startExam(ex.id);
@@ -65,9 +66,9 @@ function renderHome(){
         </div>
       </div>
       <div class="exam-meta">
-        <span class="exam-pill">第1問 45点</span>
-        <span class="exam-pill">第2問 20点</span>
-        <span class="exam-pill">第3問 35点</span>
+        <span class="exam-pill">第1問 ${ex.q1.points}点</span>
+        ${ex.q2.points>0 ? `<span class="exam-pill">第2問 ${ex.q2.points}点</span>` : ''}
+        ${ex.q3.points>0 ? `<span class="exam-pill">第3問 ${ex.q3.points}点</span>` : ''}
         ${b!==undefined ? `<span class="exam-pill ${passed?'pass':'fail'}">${passed?'合格 ':'最高 '}${b}点</span>` : ''}
         <span class="exam-arrow">▶</span>
       </div>`;
@@ -342,7 +343,9 @@ function gradeExam(timeUp){
   }
   const q2=gradeFill(2), q3=gradeFill(3);
   const total = q1score+q2.sc+q3.sc;
-  const pass = total>=70;
+  const examMax = ex.q1.points + ex.q2.points + ex.q3.points;
+  const passLine = Math.round(examMax*0.7);
+  const pass = total>=passLine;
   const sec = Math.floor((Date.now()-state.startMs)/1000);
 
   // 保存
@@ -357,7 +360,7 @@ function gradeExam(timeUp){
   q1results.forEach((r,i)=>{ if(!r.ok){ if(!wrong.some(w=>w.examId===ex.id&&w.no===i)) wrong.push({examId:ex.id,no:i}); } });
   save(LS.wrong, wrong);
 
-  state.result = { total, pass, sec, q1score, q1results, q2, q3, timeUp:!!timeUp };
+  state.result = { total, pass, sec, q1score, q1results, q2, q3, timeUp:!!timeUp, examMax, passLine };
   renderResult();
   closeCalc();
   show('result');
@@ -368,7 +371,8 @@ function renderResult(){
   const r = state.result, ex = state.ex;
   $('res-hero').className = 'res-hero ' + (r.pass?'pass':'fail');
   $('res-verdict').textContent = r.pass ? '合 格' : '不合格';
-  $('res-score').innerHTML = `${r.total}<small> / 100点</small>`;
+  $('res-score').innerHTML = `${r.total}<small> / ${r.examMax}点</small>`;
+  $('res-passmark').textContent = `合格ライン ${r.passLine}点`;
   const m=Math.floor(r.sec/60), s=r.sec%60;
   $('res-time').textContent = `⏱ 所要 ${m}分${s}秒${r.timeUp?'（時間切れ）':''}`;
   const rows = [
@@ -376,7 +380,7 @@ function renderResult(){
     ['第2問', r.q2.sc, ex.q2.points, '#16a085'],
     ['第3問', r.q3.sc, ex.q3.points, '#c0392b'],
   ];
-  $('res-break').innerHTML = rows.map(([l,sc,mx,c])=>`
+  $('res-break').innerHTML = rows.filter(([,,mx])=>mx>0).map(([l,sc,mx,c])=>`
     <div class="break-row">
       <div class="break-dai">${l}</div>
       <div class="break-bar-wrap">
@@ -385,7 +389,7 @@ function renderResult(){
       </div>
     </div>`).join('') +
     `<div style="text-align:center;font-size:12.5px;color:var(--txt2);margin-top:4px;line-height:1.7">
-      ${r.pass?'🎉 この調子です！本番でも合格ラインを超えられる実力。':'あと'+(70-r.total)+'点で合格。下の解説で間違えた問題を確認しよう。'}
+      ${r.pass?'🎉 この調子です！本番でも合格ラインを超えられる実力。':'あと'+(r.passLine-r.total)+'点で合格。下の解説で間違えた問題を確認しよう。'}
     </div>`;
 }
 
